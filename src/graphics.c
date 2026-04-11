@@ -24,11 +24,12 @@ static unsigned char bits[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 
 static unsigned char vram[V_WIDTH * V_HEIGHT] = {0};
 void initScreen() {
-    volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
+    volatile unsigned int *d = (volatile unsigned int *)vram;
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
     for (unsigned int i = 0; i < n; i++) {
         d[i] = (0xDE << 16) | 0xDE;
     }
+    updateScreen();
 }
 void updateScreen() {
     volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
