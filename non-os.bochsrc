@@ -2,7 +2,7 @@ cpu: model=bx_generic, count=1, ips=2000000, reset_on_triple_fault=1
 megs: 16
 
 display_library: sdl2
-update_freq: 12
+vga: update_freq=12
 
 floppya: 1_44="floppy.img", status=inserted
 
