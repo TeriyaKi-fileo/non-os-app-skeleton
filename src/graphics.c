@@ -79,7 +79,7 @@ void _drawPixel(int x, int y, unsigned char color_id) {
             col = col << 4;
             c = c & 0x0F;
         }
-        vram[index] = (color_id | c);
+        vram[index] = (col | c);
     }
 }
 void drawPixel(int x, int y) {
