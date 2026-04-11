@@ -8,6 +8,22 @@ MBR起動で直接セクタ読み込みして動くアプリの雛形
 - 画面
   - 160 x 100
   - 16 colors (system color)
+    - 00:black(#000000)
+    - 01:blue(#000080)
+    - 02:green(#008000)
+    - 03:cyan(#008080)
+    - 04:red(#800000)
+    - 05:magenta(#800080)
+    - 06:brown(#808000)
+    - 07:light grey(#c0c0c0)
+    - 08:grey(#808080)
+    - 09:light blue(#0000ff)
+    - 10:light green(#00ff00)
+    - 11:light cyan(#00ffff)
+    - 12:light red(#ff0000)
+    - 13:light magenta(#ff00ff)
+    - 14:yellow(#ffff00)
+    - 15:bright white(#ffffff)
 
 - 音声
   - Beep (周波数を指定)
