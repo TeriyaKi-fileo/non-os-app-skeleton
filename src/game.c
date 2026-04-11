@@ -1,4 +1,5 @@
 #include "game.h"
+#include "string.h"
 #include "graphics.h"
 #include "keyboard.h"
 #include "keymap.h"
