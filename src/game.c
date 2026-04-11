@@ -10,12 +10,12 @@ static int vx = 2, vy = 2; // 速度
 // Score (bound count)
 static int bc = 0;
 
-void gameInit() {
+void initGame() {
     bx = 80; by = 50;
 }
 
 static int is_playing = 0;
-void gameUpdate() {
+void updateGame() {
     // 壁での反射
     if (bx <= 0 || bx >= 150) {
         vx = -vx;
@@ -56,7 +56,7 @@ void gameUpdate() {
     }
 }
 
-void gameDraw() {
+void drawGame() {
     // ボールを描画
     setFgColor(15);
     drawRect(bx, by, 10, 10); 

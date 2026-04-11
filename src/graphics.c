@@ -21,24 +21,24 @@ static unsigned char bits[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 /* core */
 
 static unsigned char vram[V_WIDTH * V_HEIGHT] = {0};
-/* ---------------------------------------------------------- */
-void updateScreen() {
-    volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
+void initScreen() {
     unsigned char *s = vram; // 1ピクセル1バイトの作業配列
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
-    unsigned int val;
+    for (unsigned int i = 0; i < n; i++) {
+        d[i] = (0xDE << 16) | 0xDE;
+    }
+}
+void updateScreen() {
+    volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
+    unsigned int *s = vram; // 1ピクセル1バイトの作業配列
+    unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
 
     while ((ioIn8(0x03da) & 0x08) == 0); // V-Sync待機
     while ((ioIn8(0x03da) & 0x08) != 0);
 
     // 16000ピクセル / 4 = 4000回ループ
     for (unsigned int i = 0; i < n; i++) {
-        unsigned int p = i * 4;
-        unsigned char attr1 = ((s[p + 0] & 0x0F) << 4) | (s[p + 1] & 0x0F);
-        unsigned char attr2 = ((s[p + 2] & 0x0F) << 4) | (s[p + 3] & 0x0F);
-        // 32bit値を組み立て
-        val = (attr2 << 24) | (0xDE << 16) | (attr1 << 8) | 0xDE;
-        d[i] = val; 
+        d[i] = s[i];
     }
 }
 
@@ -64,10 +64,21 @@ void setBgColor(int id) {
 }
 
 void _drawPixel(int x, int y, unsigned char color_id) {
+    unsigned char c;
+    unsigned char col = color_id;
+    unsigned int index;
     // 画面外への書き込みを防止
     if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
-        // 1ピクセルを1バイトとして素直に書き込む
-        vram[y * V_WIDTH + x] = (color_id & 0x0F);
+        index = (y * V_WIDTH) + (x | 0x01);
+        c = vram[index]
+        if (x & 0x01) {
+            col = col & 0x0F;
+            c = c & 0xF0;
+        } else {
+            col = col << 4;
+            c = c & 0x0F;
+        }
+        vram[index] = (color_id | c);
     }
 }
 void drawPixel(int x, int y) {
