@@ -117,16 +117,6 @@ void drawLine(int x0, int y0, int x1, int y1) {
     }
 }
 
-static unsigned char num_str[16] = {0};
-void drawNumber(int x, int y, int number) {
-    int i;
-    for (i = 0; i < 16; i++) {
-        num_str[i] = 0;
-    }
-    num2str(number, num_str);
-    drawString(x, y, num_str);
-}
-
 void drawString(int x, int y, unsigned char* string) {
     int index, baseX, i, j;
     unsigned char *cs;

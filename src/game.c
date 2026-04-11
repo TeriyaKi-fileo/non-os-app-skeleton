@@ -56,7 +56,9 @@ void updateGame() {
     }
 }
 
+static unsigned char bc_str[16] = {0};
 void drawGame() {
+    int bcLength;
     // ボールを描画
     setFgColor(15);
     drawRect(bx, by, 10, 10); 
@@ -66,5 +68,7 @@ void drawGame() {
     drawNumber(18, 2, bx);
     drawNumber(18, 10, by);
     setBgColor(2);
-    drawNumber(150 - (((bc >= 10) + (bc >= 100)) * 8), 90, bc);
+    num2str(bc, bc_str);
+    bcLength = strlen(bc_str);
+    drawNumber(157 - (bcLength * 8), 90, bc);
 }

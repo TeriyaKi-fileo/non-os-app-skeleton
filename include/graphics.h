@@ -26,9 +26,6 @@ void drawRect(int x, int y, int width, int height);
 /* 直線を描画する */
 void drawLine(int x0, int y0, int x1, int y1);
 
-/* 数値を描画する */
-void drawNumber(int x, int y, int number);
-
 /* 文字を描画する */
 void drawString(int x, int y, unsigned char* string);
 
