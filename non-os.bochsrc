@@ -8,7 +8,8 @@ floppya: 1_44="floppy.img", status=inserted
 
 boot: floppy
 
-log: bochsout.txt
+#log: bochsout.txt
+log: /dev/null
 
 mouse: enabled=0
 keyboard: type=mf, serial_delay=250
