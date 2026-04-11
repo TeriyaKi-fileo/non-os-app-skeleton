@@ -19,6 +19,11 @@ static unsigned char bg_color = 0;
 
 static unsigned char bits[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 
+void vsyncWait() {
+    while ((ioIn8(0x03da) & 0x08) != 0);
+    while ((ioIn8(0x03da) & 0x08) == 0);
+}
+
 /* ---------------------------------------------------------- */
 /* core */
 
@@ -32,12 +37,10 @@ void initScreen() {
     updateScreen();
 }
 void updateScreen() {
+    vsyncWait();
     volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
     unsigned int *s = (unsigned int *)vram;
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
-
-    while ((ioIn8(0x03da) & 0x08) == 0); // V-Sync待機
-    while ((ioIn8(0x03da) & 0x08) != 0);
 
     for (unsigned int i = 0; i < n; i++) {
         d[i] = s[i];
