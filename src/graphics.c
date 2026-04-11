@@ -5,7 +5,9 @@
 #include "misaki_font.h"
 
 /* 仮想画面解像度 */
+/* 80 columns x 2 dot */
 #define V_WIDTH 160
+/* 25 rows x 4 planes */
 #define V_HEIGHT 100
 
 static int abs(int n) { return n < 0 ? -n : n; }
@@ -36,7 +38,6 @@ void updateScreen() {
     while ((ioIn8(0x03da) & 0x08) == 0); // V-Sync待機
     while ((ioIn8(0x03da) & 0x08) != 0);
 
-    // 16000ピクセル / 4 = 4000回ループ
     for (unsigned int i = 0; i < n; i++) {
         d[i] = s[i];
     }
@@ -69,7 +70,7 @@ void _drawPixel(int x, int y, unsigned char color_id) {
     unsigned int index;
     // 画面外への書き込みを防止
     if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
-        index = (y * V_WIDTH) + (x | 0x01);
+        index = (y * V_WIDTH) + (x | 0x01) - 1;
         c = vram[index];
         if (x & 0x01) {
             col = col & 0x0F;
