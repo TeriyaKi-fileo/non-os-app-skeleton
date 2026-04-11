@@ -70,7 +70,7 @@ void _drawPixel(int x, int y, unsigned char color_id) {
     unsigned int index;
     // 画面外への書き込みを防止
     if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
-        index = (y * V_WIDTH) + (x | 0x01) - 1;
+        index = (y * V_WIDTH) + (x | 0x01);
         c = vram[index];
         if (x & 0x01) {
             col = col & 0x0F;
