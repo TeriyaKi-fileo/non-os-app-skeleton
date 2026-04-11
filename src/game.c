@@ -56,19 +56,25 @@ void updateGame() {
     }
 }
 
-static unsigned char bc_str[16] = {0};
+static unsigned char strBx[8] = {0};
+static unsigned char strBy[8] = {0};
+static unsigned char strBc[16] = {0};
 void drawGame() {
     int bcLength;
     // ボールを描画
     setFgColor(15);
     drawRect(bx, by, 10, 10); 
+
     setBgColor(-1);
     drawString(2, 2, "x:");
     drawString(2, 10, "y:");
-    drawNumber(18, 2, bx);
-    drawNumber(18, 10, by);
+    num2str(bx, strBx);
+    drawString(18, 2, strBx);
+    num2str(by, strBy);
+    drawString(18, 10, strBy);
+
     setBgColor(2);
-    num2str(bc, bc_str);
-    bcLength = strlen(bc_str);
-    drawNumber(157 - (bcLength * 8), 90, bc);
+    num2str(bc, strBc);
+    bcLength = strlen(strBc);
+    drawString(157 - (bcLength * 8), 90, strBc);
 }
