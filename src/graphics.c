@@ -22,7 +22,7 @@ static unsigned char bits[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 
 static unsigned char vram[V_WIDTH * V_HEIGHT] = {0};
 void initScreen() {
-    unsigned char *s = vram; // 1ピクセル1バイトの作業配列
+    volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
     for (unsigned int i = 0; i < n; i++) {
         d[i] = (0xDE << 16) | 0xDE;
@@ -30,7 +30,7 @@ void initScreen() {
 }
 void updateScreen() {
     volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
-    unsigned int *s = vram; // 1ピクセル1バイトの作業配列
+    unsigned int *s = (unsigned int *)vram;
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
 
     while ((ioIn8(0x03da) & 0x08) == 0); // V-Sync待機
@@ -70,7 +70,7 @@ void _drawPixel(int x, int y, unsigned char color_id) {
     // 画面外への書き込みを防止
     if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
         index = (y * V_WIDTH) + (x | 0x01);
-        c = vram[index]
+        c = vram[index];
         if (x & 0x01) {
             col = col & 0x0F;
             c = c & 0xF0;
