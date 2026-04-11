@@ -1,0 +1,13 @@
+cpu: model=bx_generic, count=1, ips=50000000, reset_on_triple_fault=1
+megs: 16
+
+display_library: sdl2
+
+floppya: 1_44="floppy.img", status=inserted
+
+boot: floppy
+
+log: bochsout.txt
+
+mouse: enabled=0
+keyboard: type=mf, serial_delay=250
