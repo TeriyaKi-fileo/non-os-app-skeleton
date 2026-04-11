@@ -66,5 +66,5 @@ void drawGame() {
     drawNumber(18, 2, bx);
     drawNumber(18, 10, by);
     setBgColor(2);
-    drawNumber(150, 90, bc);
+    drawNumber(150 - (((bc >= 10) + (bc >= 100)) * 8), 90, bc);
 }
