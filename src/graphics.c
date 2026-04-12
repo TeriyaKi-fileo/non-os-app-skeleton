@@ -27,24 +27,24 @@ void vsyncWait() {
 /* ---------------------------------------------------------- */
 /* core */
 
-static unsigned char vram[V_WIDTH * V_HEIGHT] = {0};
+static unsigned char vram[V_WIDTH * V_HEIGHT] __attribute__((aligned(4))) = {0};
 void initScreen() {
     volatile unsigned int *d = (volatile unsigned int *)vram;
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
     for (unsigned int i = 0; i < n; i++) {
-        d[i] = (0xDE << 16) | 0xDE;
+        d[i] = (0xDE << 16) | 0xDE; // 最初は前景・背景ともに黒（０）でよい
     }
     updateScreen();
 }
 void updateScreen() {
     vsyncWait();
-    volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
-    unsigned int *s = (unsigned int *)vram;
-    unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
-
-    for (unsigned int i = 0; i < n; i++) {
-        d[i] = s[i];
-    }
+    // 0xB8000 はテキストVRAMのアドレス
+    __asm__ __volatile__ (
+        "cld; rep movsl"
+        :
+        : "S"(vram), "D"(0xB8000), "c"(4000) // 160*100 / 4 = 4000
+        : "memory"
+    );
 }
 
 /* ---------------------------------------------------------- */
@@ -68,7 +68,7 @@ void setBgColor(int id) {
     }
 }
 
-void _drawPixel(int x, int y, unsigned char color_id) {
+static inline void _drawPixel(int x, int y, unsigned char color_id) {
     unsigned char c;
     unsigned char col = color_id;
     unsigned int index;
