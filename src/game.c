@@ -72,9 +72,9 @@ void drawGame() {
     drawString(18, 2, strBx);
     num2str(by, strBy);
     drawString(18, 10, strBy);
-    setFgColor(15);
     for (int i = 0; i < 0x80; i++) {
         if (getKeyState(i)) {
+            setFgColor((getColor(i*2, 98) + 2) & 0x0F);
             drawRect(i*2, 98, 2, 2);
         }
     }

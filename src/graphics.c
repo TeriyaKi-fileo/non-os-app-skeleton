@@ -92,6 +92,14 @@ void drawPixel(int x, int y) {
     }
 }
 
+unsigned char getColor(int x, int y) {
+    if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
+        return vram[(y * V_WIDTH) + (x | 0x01)];
+    } else {
+        return 0;
+    }
+}
+
 void drawRect(int x, int y, int width, int height) {
     if (!fg_is_draw) {
         return;
