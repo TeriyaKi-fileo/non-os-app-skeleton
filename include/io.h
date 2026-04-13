@@ -8,7 +8,7 @@ void ioOut8(int port, int data);
 unsigned char ioIn8(int port);
 
 /* VSync待ち */
-void ioVsyncWait(void);
+static inline void ioVsyncWait(void);
 
 /* CPUを休止させる（割り込み待ち） */
 void ioHlt(void);
