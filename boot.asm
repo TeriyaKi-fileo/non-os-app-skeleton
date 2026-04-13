@@ -18,7 +18,7 @@ start:
     mov ax, 0x0003
     int 0x10
 
-    ; 2. font adjust
+    ; 2. font adjust(フォント再設定機能を利用して副作用で高さを1/4にする)
     mov ax, 0x1110
     mov bx, 0x0400
     mov cx, 0x0001
@@ -71,7 +71,7 @@ next_sector:
 
 check_end:
     ; 合計読み込み回数をカウントするか、トラック数で判定
-    ;cmp ch, 40          ; 40シリンダ(全容量)まで読んだら終了
+    ; cmp ch, 40          ; 40シリンダ(全容量)まで読んだら終了 <-- これは危険
     cmp ch, 28          ; 何も考えずに全トラックを読んだらVRAM破壊する容量になるので、28シリンダまでにする
     jne read_loop
 
