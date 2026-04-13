@@ -10,7 +10,7 @@ unsigned char ioIn8(int port) {
     return data;
 }
 
-static inline void ioVsyncWait(void) {
+void ioVsyncWait(void) {
     __asm__ __volatile__ (
         "movw $0x3da, %%dx\n\t"
         
