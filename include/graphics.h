@@ -20,6 +20,11 @@ void setBgColor(int id);
  */
 void drawPixel(int x, int y);
 
+/**
+ * 色を取得する
+ */
+unsigned char getColor(int x, int y);
+
 /* 四角形を描画する */
 void drawRect(int x, int y, int width, int height);
 
