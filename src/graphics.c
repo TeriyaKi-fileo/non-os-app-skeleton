@@ -93,8 +93,14 @@ void drawPixel(int x, int y) {
 }
 
 unsigned char getColor(int x, int y) {
+    unsigned char c;
     if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
-        return vram[(y * V_WIDTH) + (x | 0x01)];
+        c = vram[(y * V_WIDTH) + (x | 0x01)];
+        if (x & 0x01) {
+            return c & 0x0F;
+        } else {
+            return (c >> 4) & 0x0F;
+        }
     } else {
         return 0;
     }
