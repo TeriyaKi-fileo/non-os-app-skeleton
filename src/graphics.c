@@ -19,11 +19,6 @@ static unsigned char bg_color = 0;
 
 static unsigned char bits[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 
-void vsyncWait() {
-    while ((ioIn8(0x03da) & 0x08) == 0);
-    while ((ioIn8(0x03da) & 0x08) != 0);
-}
-
 /* ---------------------------------------------------------- */
 /* core */
 
@@ -37,7 +32,7 @@ void initScreen() {
     updateScreen();
 }
 void updateScreen() {
-    vsyncWait();
+    ioVsyncWait();
     // 0xB8000 はテキストVRAMのアドレス
     __asm__ __volatile__ (
         "cld; rep movsl"
