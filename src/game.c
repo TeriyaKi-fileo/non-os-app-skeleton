@@ -79,6 +79,7 @@ void drawGame() {
         }
     }
 
+    setFgColor(15);
     setBgColor(2);
     num2str(bc, strBc);
     bcLength = strlen(strBc);
