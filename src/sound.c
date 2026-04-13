@@ -2,11 +2,11 @@
 #include "sound.h"
 
 /* O4の音階(黒鍵含む) */
-static const uint16_t OCTAVE4_FULL_TABLE[] = {
+static const unsigned int OCTAVE4_FULL_TABLE[] = {
     262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494
 };
 /* O4の白鍵の位置 */
-static const uint8_t KEY_STEPS[] = {0, 2, 4, 5, 7, 9, 11};
+static const unsigned char KEY_STEPS[] = {0, 2, 4, 5, 7, 9, 11};
 
 /**
  * 音階で鳴らす
@@ -15,7 +15,7 @@ static const uint8_t KEY_STEPS[] = {0, 2, 4, 5, 7, 9, 11};
  * isSharp= 0 or 1
  */
 void playNote(unsigned char octave, unsigned char note, unsigned char isSharp) {
-    int noteIndex = KEY_STEPS[note % 7] + isSharp;
+    unsigned char noteIndex = KEY_STEPS[note % 7] + isSharp;
     // 基準オクターブの周波数を取得
     unsigned int freq = OCTAVE4_FULL_TABLE[noteIndex % 12];
     // オクターブ移動をシフト演算（2のn乗）で解決
