@@ -37,7 +37,7 @@ void updateGame() {
 
     // sound test
     if (getKeyState(KEY_SPACE) && !is_playing) {
-        playSound(440);
+        playNote(4, 0, 0);
         is_playing = 1;
     } else if (!getKeyState(KEY_SPACE) && is_playing) {
         stopSound();
