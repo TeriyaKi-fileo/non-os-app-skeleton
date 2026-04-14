@@ -50,6 +50,7 @@ void updateScreen() {
  * r,g,b: 0-255
  */
 void setPalette(int id, unsigned char r, unsigned char g, unsigned char b) {
+    unsigned int eflags;
     __asm__ __volatile__ (
         "pushfl\n\t"
         "popl %0\n\t"
