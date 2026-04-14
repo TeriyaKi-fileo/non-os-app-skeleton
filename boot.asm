@@ -49,9 +49,7 @@ start:
     jmp pmode_entry
 pmode_entry:
     mov bx, 0x10        ; データセグメント記述子(0x10)を選択
-    mov ds, bx          ; 各セグメントの隠しリミットを4GBに拡張
-    mov es, bx
-    mov ss, bx
+    mov fs, bx          ; fs のリミットを 4GB に拡張 (BIOSはfsを原則破壊しない)
     mov eax, cr0
     and al, 0xFE
     mov cr0, eax        ; リアルモードへ復帰
@@ -60,7 +58,7 @@ back_to_real:
     xor ax, ax
     mov ds, ax
     mov es, ax
-    mov ss, ax          ; 各レジスタをリアルモードの値で初期化
+    mov ss, ax          ; 各レジスタをリアルモードの値(0)で初期化
     sti
 
     ; --- フロッピー全域(約1.44MB)を 0x10000 へ読み込むループ ---
@@ -73,9 +71,9 @@ back_to_real:
     mov dx, 0x0000      ; DH=0(ヘッド), DL=0(ドライブ0)
 
 read_loop:
+    ; BIOS読み込み用に一時バッファ(0x0000:0x8000)を設定
     push es
     push bx
-    ; BIOS読み込み用に一時バッファ(0x0000:0x8000)を設定
     xor ax, ax
     mov es, ax
     mov bx, 0x8000
@@ -84,18 +82,23 @@ read_loop:
     int 0x13
     jc  error
 
-    ; Unreal Modeを利用して 1MB 以降へ 512バイト転送
+    ; Unreal Mode (fs) を利用して 1MB 以降へ 512バイト転送
     push esi
     push ecx
     mov esi, 0x8000     ; 転送元バッファ
     mov ecx, 128        ; 512バイト / 4バイト
-    db 0x66, 0xf3, 0xa5  ; rep movsd (32bit転送命令)
+.copy_sector:
+    mov eax, [ds:esi]
+    mov [fs:edi], eax   ; fs(4GBリミット)を使用して 1MB超えへ書き込み
+    add esi, 4
+    add edi, 4
+    loop .copy_sector
     pop ecx
     pop esi
 
     pop bx
     pop es
-    add edi, 512        ; 転送先ポインタを進める
+    ; add edi, 512      ; 転送ループ内で edi が進むためここでは不要
 
     ; 次のセクタへ準備
     ; add bx, 512         ; 1セクタ分オフセットを進める
