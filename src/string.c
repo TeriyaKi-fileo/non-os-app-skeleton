@@ -1,5 +1,11 @@
 #include "string.h"
 
+int strlen(const char* str) {
+    int len;
+    for (len = 0; str[len] != 0; len++) { /* nop */ }
+    return len;
+}
+
 void num2str(int num, unsigned char* dist) {
     int index = 0;
     int work, p, i;

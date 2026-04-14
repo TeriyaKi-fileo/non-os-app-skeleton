@@ -2,6 +2,11 @@
 #define CORE_GRAPHICS_H
 
 /**
+ * initialize
+ */
+void initScreen(void);
+
+/**
  * update
  */
 void updateScreen(void);

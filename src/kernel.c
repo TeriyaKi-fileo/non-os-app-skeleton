@@ -4,13 +4,14 @@
 #include "game.h"
 
 void main() {
-    gameInit(); // 注入されたゲームの初期化
+    initGame(); // 注入されたゲームの初期化
+    initScreen(); // 画面初期化
 
     for (;;) {
         updateKeyInput();
         
-        gameUpdate(); // ロジック実行
-        gameDraw();   // 描画実行
+        updateGame(); // ロジック実行
+        drawGame();   // 描画実行
 
         updateScreen(); // VRAM転送
     }

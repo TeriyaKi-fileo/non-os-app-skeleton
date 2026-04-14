@@ -46,7 +46,7 @@ clean:
 
 qemu: $(IMG)
 	qemu-system-i386 -drive format=raw,file=$(IMG),if=floppy,index=0 \
-	-machine pcspk-audiodev=snd0 \
+	-machine pcspk-audiodev=snd0 -vga std \
 	-audiodev pa,id=snd0
 
 bochs: $(IMG)

@@ -5,7 +5,9 @@
 #include "misaki_font.h"
 
 /* 仮想画面解像度 */
+/* 80 columns x 2 dot */
 #define V_WIDTH 160
+/* 25 rows x 4 planes */
 #define V_HEIGHT 100
 
 static int abs(int n) { return n < 0 ? -n : n; }
@@ -20,30 +22,57 @@ static unsigned char bits[8] = {128, 64, 32, 16, 8, 4, 2, 1};
 /* ---------------------------------------------------------- */
 /* core */
 
-static unsigned char vram[V_WIDTH * V_HEIGHT] = {0};
-/* ---------------------------------------------------------- */
-void updateScreen() {
-    volatile unsigned int *d = (volatile unsigned int *)0x000B8000;
-    unsigned char *s = vram; // 1ピクセル1バイトの作業配列
+static unsigned char vram[V_WIDTH * V_HEIGHT] __attribute__((aligned(4))) = {0};
+void initScreen() {
+    volatile unsigned int *d = (volatile unsigned int *)vram;
     unsigned int n = (V_WIDTH * V_HEIGHT) / 4; // 4:size of int(32bit)
-    unsigned int val;
-
-    while ((ioIn8(0x03da) & 0x08) == 0); // V-Sync待機
-    while ((ioIn8(0x03da) & 0x08) != 0);
-
-    // 16000ピクセル / 4 = 4000回ループ
     for (unsigned int i = 0; i < n; i++) {
-        unsigned int p = i * 4;
-        unsigned char attr1 = ((s[p + 0] & 0x0F) << 4) | (s[p + 1] & 0x0F);
-        unsigned char attr2 = ((s[p + 2] & 0x0F) << 4) | (s[p + 3] & 0x0F);
-        // 32bit値を組み立て
-        val = (attr2 << 24) | (0xDE << 16) | (attr1 << 8) | 0xDE;
-        d[i] = val; 
+        d[i] = (0xDE << 16) | 0xDE; // 最初は前景・背景ともに黒（０）でよい
     }
+    updateScreen();
+}
+void updateScreen() {
+    ioVsyncWait();
+    // 0xB8000 はテキストVRAMのアドレス
+    __asm__ __volatile__ (
+        "cld; rep movsl"
+        :
+        : "S"(vram), "D"(0xB8000), "c"(4000) // 160*100 / 4 = 4000
+        : "memory"
+    );
 }
 
 /* ---------------------------------------------------------- */
 /* common */
+
+/**
+ * id: 0-15
+ * r,g,b: 0-255
+ */
+void setPalette(int id, unsigned char r, unsigned char g, unsigned char b) {
+    unsigned int eflags;
+    __asm__ __volatile__ (
+        "pushfl\n\t"
+        "popl %0\n\t"
+        "cli"
+        : "=rm" (eflags) 
+        : 
+        : "memory"
+    );
+
+    ioOut8(0x03c8, id & 0x0F);
+    ioOut8(0x03c9, r >> 2);
+    ioOut8(0x03c9, g >> 2);
+    ioOut8(0x03c9, b >> 2);
+
+    __asm__ __volatile__ (
+        "pushl %0\n\t"
+        "popfl"
+        : 
+        : "rm" (eflags) 
+        : "memory"
+    );
+}
 
 void setFgColor(int id) {
     if (id < 0) {
@@ -63,16 +92,41 @@ void setBgColor(int id) {
     }
 }
 
-void _drawPixel(int x, int y, unsigned char color_id) {
+static inline void _drawPixel(int x, int y, unsigned char color_id) {
+    unsigned char c;
+    unsigned char col = color_id;
+    unsigned int index;
     // 画面外への書き込みを防止
     if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
-        // 1ピクセルを1バイトとして素直に書き込む
-        vram[y * V_WIDTH + x] = (color_id & 0x0F);
+        index = (y * V_WIDTH) + (x | 0x01);
+        c = vram[index];
+        if (x & 0x01) {
+            col = col & 0x0F;
+            c = c & 0xF0;
+        } else {
+            col = col << 4;
+            c = c & 0x0F;
+        }
+        vram[index] = (col | c);
     }
 }
 void drawPixel(int x, int y) {
     if (fg_is_draw) {
         _drawPixel(x, y, fg_color);
+    }
+}
+
+unsigned char getColor(int x, int y) {
+    unsigned char c;
+    if (x >= 0 && x < V_WIDTH && y >= 0 && y < V_HEIGHT) {
+        c = vram[(y * V_WIDTH) + (x | 0x01)];
+        if (x & 0x01) {
+            return c & 0x0F;
+        } else {
+            return (c >> 4) & 0x0F;
+        }
+    } else {
+        return 0;
     }
 }
 
@@ -102,16 +156,6 @@ void drawLine(int x0, int y0, int x1, int y1) {
         if (e2 >= dy) { err += dy; x0 += sx; }
         if (e2 <= dx) { err += dx; y0 += sy; }
     }
-}
-
-static unsigned char num_str[16] = {0};
-void drawNumber(int x, int y, int number) {
-    int i;
-    for (i = 0; i < 16; i++) {
-        num_str[i] = 0;
-    }
-    num2str(number, num_str);
-    drawString(x, y, num_str);
 }
 
 void drawString(int x, int y, unsigned char* string) {
