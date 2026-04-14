@@ -2,11 +2,12 @@
 org 0x7c00
 
 start:
-    ; CGA03H / extra
+    ; 03H
     ; 160x100 16 colors / VRAM = B800:0000 - B800:7FFF.
     ; 2 pixels per 2bytes.
     ; 
-    ; 386以降の端末を想定しているので、VGA前提でボードチェックしていない
+    ; 386以降の端末を想定しているので、VGA前提。
+    ; 時代的に問題ないだろうとボードチェックしていない。
     ;
     ; 76543210 76543210
     ; 11011110 ....::::
@@ -35,26 +36,73 @@ start:
     mov cx, 0x2020
     int 0x10
 
-    ; --- フロッピー全域(約1.44MB)を 0x10000 へ読み込むループ ---
-    mov ax, 0x1000      ; 読み込み先セグメント
+    ; --- A20ラインを有効化 ---
+    in al, 0x92
+    or al, 2
+    out 0x92, al
+
+    ; --- Unreal Mode 移行処理 ---
+    cli
+    lgdt [gdtr]
+    mov eax, cr0
+    or  al, 1
+    mov cr0, eax        ; プロテクトモードへ一時移行
+    jmp pmode_entry
+pmode_entry:
+    mov bx, 0x10        ; データセグメント記述子(0x10)を選択
+    mov ds, bx          ; 各セグメントの隠しリミットを4GBに拡張
+    mov es, bx
+    mov ss, bx
+    mov eax, cr0
+    and al, 0xFE
+    mov cr0, eax        ; リアルモードへ復帰
+    jmp 0:back_to_real
+back_to_real:
+    xor ax, ax
+    mov ds, ax
     mov es, ax
-    mov bx, 0           ; オフセット
+    mov ss, ax          ; 各レジスタをリアルモードの値で初期化
+    sti
+
+    ; --- フロッピー全域(約1.44MB)を 1MB以降(0x100000) へ読み込むループ ---
+    ; 既存: mov ax, 0x1000      ; 読み込み先セグメント
+    ; 既存: mov es, ax
+    ; 既存: mov bx, 0           ; オフセット
     
+    mov edi, 0x100000   ; Unreal Modeを利用した1MB以降の転送先ポインタ
     mov cx, 0x0002      ; CH=0(トラック), CL=2(セクタ2から開始)
     mov dx, 0x0000      ; DH=0(ヘッド), DL=0(ドライブ0)
 
 read_loop:
+    push es
+    push bx
+    ; BIOS読み込み用に一時バッファ(0x0000:0x8000)を設定
+    xor ax, ax
+    mov es, ax
+    mov bx, 0x8000
     mov ah, 0x02
     mov al, 1           ; 1セクタずつ確実に読む (低速だが確実)
     int 0x13
     jc  error
+    
+    ; 読み込んだ512バイトを 1MB 以降へ転送
+    push esi
+    push ecx
+    mov esi, 0x8000     ; 転送元バッファ
+    mov ecx, 128        ; 512バイト / 4バイト
+    db 0x66, 0xf3, 0xa5  ; rep movsd (32bit転送命令)
+    pop ecx
+    pop esi
+    
+    pop bx
+    pop es
+    add edi, 512        ; 1MB以降のポインタを1セクタ分進める
 
-    ; 次のセクタへ準備
-    add bx, 512         ; 1セクタ分オフセットを進める
-    jnz next_sector     ; 64KB境界を超えていなければ次へ
-    mov ax, es          ; 64KB超えたらセグメントを更新
-    add ax, 0x1000
-    mov es, ax
+    ; 既存: add bx, 512         ; 1セクタ分オフセットを進める
+    ; 既存: jnz next_sector     ; 64KB境界を超えていなければ次へ
+    ; 既存: mov ax, es          ; 64KB超えたらセグメントを更新
+    ; 既存: add ax, 0x1000
+    ; 既存: mov es, ax
 
 next_sector:
     inc cl              ; セクタ番号を増やす
@@ -71,17 +119,15 @@ next_sector:
 
 check_end:
     ; 合計読み込み回数をカウントするか、トラック数で判定
-    ; cmp ch, 40          ; 40シリンダ(全容量)まで読んだら終了 <-- これは危険
-    cmp ch, 28          ; 何も考えずに全トラックを読んだらVRAM破壊する容量になるので、28シリンダまでにする
+    ; 既存: cmp ch, 28          ; 何も考えずに全トラックを読んだらVRAM破壊する容量になるので、28シリンダまでにする
+    cmp ch, 80          ; 1.44MB全域(80シリンダ)を読み込む
     jne read_loop
 
     ; --- 32bit移行 ---
     cli
-    ; --- A20ラインを有効化 ---
-    in al, 0x92
-    or al, 2
-    out 0x92, al
-    ; --- --- ---
+    ; 既存: in al, 0x92
+    ; 既存: or al, 2
+    ; 既存: out 0x92, al
     lgdt [gdtr]
     mov eax, cr0
     or  eax, 1
@@ -98,21 +144,16 @@ init_pm:
     mov esp, 0x90000    ; スタックを1MB以下に確保
 
     ; --- High Memory (0x100000) への一括転送 ---
-    ; 0x10000 に読み込んだデータを 0x100000 へコピー
-    mov esi, 0x10000    ; 転送元
-    mov edi, 0x100000   ; 転送先 (1MB)
-    ; 1シリンダあたり18セクタ * 2ヘッドあるので、
-    ; それをもとに読み込んだトラック数からセクタ数を計算（2HDなら１シリンダ２トラック）
-    ; ただし転送容量はブートセクタ１をマイナスしておく
-    ;mov ecx, (1439 * 512) / 4 ; すべて(4バイト単位) --- 18セクタ * 2ヘッド * 40シリンダ = 1440 - 自身1
-    mov ecx, (1007 * 512) / 4 ; 28シリンダ分(4バイト単位) --- 18 * 2 * 28 - 1
-    rep movsd
+    ; 既存: mov esi, 0x10000    ; 転送元
+    ; 既存: mov edi, 0x100000   ; 転送先 (1MB)
+    ; 既存: mov ecx, (1007 * 512) / 4 ; 28シリンダ分(4バイト単位) --- 18 * 2 * 28 - 1
+    ; 既存: rep movsd
 
     ; --- 転送後は元の場所(0x10000)をクリア ---
-    mov edi, 0x10000
-    xor eax, eax
-    mov ecx, (1007 * 512) / 4 ; 転送したのと同じサイズ
-    rep stosd                 ; 0で塗りつぶす
+    ; 既存: mov edi, 0x10000
+    ; 既存: xor eax, eax
+    ; 既存: mov ecx, (1007 * 512) / 4 ; 転送したのと同じサイズ
+    ; 既存: rep stosd                 ; 0で塗りつぶす
 
     jmp 0x100000        ; 1MB地点のカーネルへジャンプ
 
