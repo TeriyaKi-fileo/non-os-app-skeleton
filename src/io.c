@@ -30,15 +30,3 @@ void ioVsyncWait(void) {
         : "ax", "dx" // 使用するレジスタを破壊対象として通知
     );
 }
-
-void ioHlt(void) {
-    __asm__ __volatile__ ("hlt");
-}
-
-void ioCli(void) {
-    __asm__ __volatile__ ("cli");
-}
-
-void ioSti(void) {
-    __asm__ __volatile__ ("sti");
-}
