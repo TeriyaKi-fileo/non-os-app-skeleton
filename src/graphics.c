@@ -50,13 +50,27 @@ void updateScreen() {
  * r,g,b: 0-255
  */
 void setPalette(int id, unsigned char r, unsigned char g, unsigned char b) {
-    __asm__ __volatile__ ("pushfd");
-    __asm__ __volatile__ ("cli");
+    __asm__ __volatile__ (
+        "pushfl\n\t"
+        "popl %0\n\t"
+        "cli"
+        : "=rm" (eflags) 
+        : 
+        : "memory"
+    );
+
     ioOut8(0x03c8, id & 0x0F);
     ioOut8(0x03c9, r >> 2);
     ioOut8(0x03c9, g >> 2);
     ioOut8(0x03c9, b >> 2);
-    __asm__ __volatile__ ("popfd");
+
+    __asm__ __volatile__ (
+        "pushl %0\n\t"
+        "popfl"
+        : 
+        : "rm" (eflags) 
+        : "memory"
+    );
 }
 
 void setFgColor(int id) {
