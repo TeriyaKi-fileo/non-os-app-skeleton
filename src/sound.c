@@ -23,7 +23,7 @@ void playNote(unsigned char octave, unsigned char note, unsigned char isSharp) {
     if (shift > 0) {
         playSound(freq << shift);
     } else {
-        playSound(freq >> shift);
+        playSound(freq >> -shift);
     }
 }
 
