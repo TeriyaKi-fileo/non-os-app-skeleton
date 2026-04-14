@@ -13,6 +13,7 @@ static int bc = 0;
 
 void initGame() {
     bx = 70; by = 40;
+    setPalette(0, 32, 64, 64);
 }
 
 static int is_playing = 0;

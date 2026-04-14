@@ -2,6 +2,11 @@
 #define GRAPHICS_H
 
 /**
+ * パレットの設定
+ */
+void setPalette(int id, unsigned char r, unsigned char g, unsigned char b);
+
+/**
  * 全景色の設定
  * @param {int} id - palette index (負数は透過)
  */

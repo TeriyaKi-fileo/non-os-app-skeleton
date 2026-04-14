@@ -45,6 +45,19 @@ void updateScreen() {
 /* ---------------------------------------------------------- */
 /* common */
 
+/**
+ * id: 0-15
+ * r,g,b: 0-255
+ */
+void setPalette(int id, unsigned char r, unsigned char g, unsigned char b) {
+    ioCli();
+    ioOut8(0x03c8, id & 0x0F);
+    ioOut8(0x03c9, r >> 2);
+    ioOut8(0x03c9, g >> 2);
+    ioOut8(0x03c9, b >> 2);
+    ioSti();
+}
+
 void setFgColor(int id) {
     if (id < 0) {
         fg_is_draw = 0;
