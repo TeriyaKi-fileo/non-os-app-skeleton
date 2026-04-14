@@ -1,5 +1,5 @@
-cpu: model=bx_generic, count=1, ips=2000000, reset_on_triple_fault=1
-megs: 16
+cpu: model=bx_generic, count=1, ips=1600000, reset_on_triple_fault=1
+megs: 4
 
 display_library: sdl2
 vga: update_freq=12
