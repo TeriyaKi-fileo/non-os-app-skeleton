@@ -50,13 +50,13 @@ void updateScreen() {
  * r,g,b: 0-255
  */
 void setPalette(int id, unsigned char r, unsigned char g, unsigned char b) {
-    __asm__ __volatile__ ("pushf");
+    __asm__ __volatile__ ("pushfd");
     __asm__ __volatile__ ("cli");
     ioOut8(0x03c8, id & 0x0F);
     ioOut8(0x03c9, r >> 2);
     ioOut8(0x03c9, g >> 2);
     ioOut8(0x03c9, b >> 2);
-    __asm__ __volatile__ ("popf");
+    __asm__ __volatile__ ("popfd");
 }
 
 void setFgColor(int id) {
