@@ -58,3 +58,4 @@ MBR起動で直接セクタ読み込みして動くアプリの雛形
 ## 構築
 - sudo apt update
 - sudo apt install nasm gcc make qemu-system-x86
+- sudo apt install bochs bochs-sdl bochsbios vgabios
