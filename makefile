@@ -20,7 +20,7 @@ IMG     := floppy.img
 LINKER  := linker.ld
 
 # オプション
-CFLAGS  = -m32 -Werror -ffreestanding -fno-stack-protector -fno-pic -O1 -I$(INC_DIR)
+CFLAGS  = -m32 -march=i386 -Werror -ffreestanding -fno-stack-protector -fno-pic -O1 -I$(INC_DIR)
 LDFLAGS = -m elf_i386 -T $(LINKER)
 
 all: $(IMG)
