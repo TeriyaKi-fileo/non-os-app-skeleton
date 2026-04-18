@@ -36,11 +36,8 @@ start:
     mov cx, 0x2020
     int 0x10
 
-    cli
     ; --- A20ラインを有効化 ---
-    in al, 0x92
-    or al, 2
-    out 0x92, al
+    call enable_a20
 
     ; --- Unreal Mode 移行処理 ---
     lgdt [gdtr]
@@ -60,7 +57,6 @@ back_to_real:
     mov ds, ax
     mov es, ax
     mov ss, ax          ; 各レジスタをリアルモードの値(0)で初期化
-    sti
 
     ; --- フロッピー全域(約1.44MB)を 0x10000 へ読み込む ---
     mov edi, 0x100000   ; 1MB以降の転送先ポインタ
@@ -147,6 +143,65 @@ gdtr:
     dw gdt_end - gdt_base - 1
     dd gdt_base
 
+[bits 16]
+; ======================================================= sub routine
+; --- A20有効化 メイン処理 ---
+enable_a20:
+    ;mov byte [a20_test_pat], 0x99
+    ;cli                ; 強制的に無効化（デバッグ用）
+    ;in al, 0x92
+    ;and al, 0xfd
+    ;out 0x92, al
+    ;sti
+    call check_a20      ; 最初から有効か？
+    jnz  a20_done
+
+    mov byte [a20_test_pat], 0x01
+    mov  ax, 0x2401     ; 試行1: BIOS呼び出し
+    int  0x15
+    call check_a20
+    jnz  a20_done
+
+    mov byte [a20_test_pat], 0x02
+    cli
+    in   al, 0x92       ; 試行2: Fast A20
+    or   al, 0x02
+    out  0x92, al
+    sti
+    call check_a20
+    jnz  a20_done
+
+    jmp  $              ; 全て失敗ならフリーズ
+
+a20_done:
+    ret                 ; 以降の処理へ
+
+; --- A20チェック（専用変数利用版） ---
+check_a20:
+    push ds
+    push es
+    
+    xor ax, ax
+    mov ds, ax          ; ds = 0x0000
+    not ax
+    mov es, ax          ; es = 0xffff (1MB-16B)
+
+    mov byte [a20_test_var], 0x00
+    mov byte [es:0x7e0d], 0xff  ; A20無効なら上書きされるはず
+
+    cmp byte [a20_test_var], 0xff
+    
+    mov ax, 0
+    je .done            ; ZF=1 (一致) なら A20無効
+    inc ax              ; ZF=0 (不一致) なら A20有効
+.done:
+    pop es
+    pop ds
+    ret
+
 ; MBR用の埋め
-times 510-($-$$) db 0
+times 508-($-$$) db 0
+; --- データ定義（A20テスト用） ---
+a20_test_pat: db 0xBE
+a20_test_var: db 0xAF
 dw 0xaa55
